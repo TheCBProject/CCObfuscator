@@ -41,7 +41,7 @@ public class Main
         parser.acceptsAll(asList("q", "quiet"), "Disable error logging");
         parser.acceptsAll(asList("v", "verbose"), "Enable detailed logging");
         parser.acceptsAll(asList("zip"), "Set this to zip the contents of obfuscated directories");
-        parser.acceptsAll(asList("srg"), "Obfuscate/Deobfuscate to srg names");
+        parser.acceptsAll(asList("to-srg"), "Obfuscate/Deobfuscate to srg names");
         parser.acceptsAll(asList("mcp"), "MCP dir, equal to -r " +
                 "-input \"<mcp>/bin/minecraft\" " +
                 "-libs \"<mcp>/lib,<mcp>/jars/libraries\" " +
@@ -156,7 +156,7 @@ public class Main
             r.setVerbose();
         if(options.has("quiet"))
             r.setQuiet();
-        if(options.has("srg"))
+        if(options.has("to-srg"))
             r.setSearge();
         
         new ObfReadThread(r, mods, libs, outDir, options.has("zip")).start();
