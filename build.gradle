@@ -1,0 +1,113 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+}
+
+group 'codechicken'
+archivesBaseName = 'CCObfuscator'
+version '1.0.0'
+
+targetCompatibility = "1.7"
+sourceCompatibility = "1.7"
+
+
+version = "$version." + (System.getenv("BUILD_NUMBER") ?: "1")
+println "Starting build of ${archivesBaseName}, Version: ${version}"
+
+repositories {
+    mavenLocal()
+    jcenter()
+    mavenCentral()
+}
+
+configurations {
+    shadow
+    implementation.extendsFrom shadow
+}
+
+dependencies {
+    shadow 'org.ow2.asm:asm-debug-all:4.1'
+    shadow 'com.google.guava:guava:14.0'
+    shadow 'net.sf.jopt-simple:jopt-simple:4.5'
+}
+
+def commonManifest = {
+    attributes 'Main-Class': 'codechicken.obfuscator.fs.Main'
+}
+
+jar {
+    manifest commonManifest
+    from file("LICENSE")
+}
+
+shadowJar {
+    minimize()
+    manifest commonManifest
+    configurations = [project.configurations.shadow]
+
+    //Include license, exclude java9 and maven things.
+    from file("LICENSE")
+    exclude 'META-INF/maven/**'
+    exclude 'module-info.class'
+}
+
+task srcJar(type: Jar) {
+    classifier 'sources'
+    from sourceSets.main.allSource
+    from file("LICENSE")
+}
+
+ publishing {
+     repositories {
+         if (System.getenv('MAVEN_PASS')) {
+             maven {
+                 url "https://maven-upload.covers1624.net/"
+                 credentials {
+                     username 'covers1624'
+                     password System.getenv('MAVEN_PASS')
+                 }
+             }
+         }
+     }
+     publications {
+         maven(MavenPublication) {
+             groupId project.group
+             artifactId project.archivesBaseName
+             version project.version
+             from components['java']
+             artifact shadowJar
+             artifact srcJar
+
+             pom {
+                 name = archivesBaseName
+                 description = archivesBaseName
+                 //The publish plugin doesnt like GString's here apparently..
+                 url = "https://github.com/TheCBProject/${archivesBaseName}".toString()
+                 scm {
+                     url = "https://github.com/TheCBProject/${archivesBaseName}".toString()
+                     connection = "scm:git:git://github.com/TheCBProject/${archivesBaseName}.git".toString()
+                     connection = "scm:git:git@github.com:TheCBProject/${archivesBaseName}.git".toString()
+                 }
+
+                 issueManagement {
+                     system = 'github'
+                     url = "https://github.com/TheCBProject/${archivesBaseName}/issues".toString()
+                 }
+                 licenses {
+                     license {
+                         name = "GNU LESSER GENERAL PUBLIC LICENSE Version 2.1"
+                         url = "https://raw.githubusercontent.com/TheCBProject/${archivesBaseName}/master/LICENSE".toString()
+                         distribution = 'repo'
+                     }
+                 }
+                 developers {
+                     developer {
+                         id = 'ChickenBones'
+                         name = 'Chicken Bones'
+                     }
+                 }
+             }
+         }
+     }
+ }
