@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Map.Entry;
 
 import com.google.common.base.Function;
@@ -70,6 +71,8 @@ public class ObfuscationMap
     
     private Map<String, ClassEntry> srgMap = new HashMap<String, ClassEntry>();
     private Map<String, ClassEntry> obfMap = new HashMap<String, ClassEntry>();
+    private String dotPkA;
+    private String dotPkB;
     private ArrayListMultimap<String, ObfuscationEntry> srgMemberMap = ArrayListMultimap.create();
     
     private IHeirachyEvaluator heirachyEvaluator;
@@ -135,6 +138,14 @@ public class ObfuscationMap
         }
     }
     
+    public String getDotPkA() {
+        return dotPkA;
+    }
+
+    public String getDotPkB() {
+        return dotPkB;
+    }
+
     public ObfuscationEntry lookupSrg(String srg_key)
     {
         List<ObfuscationEntry> list = srgMemberMap.get(srg_key);
@@ -307,6 +318,22 @@ public class ObfuscationMap
                     addMethod(p1[0], p1[1], params[1], 
                             p2[0], p2[1], params[3]);
                     return null;
+                }
+                else if(line.startsWith("PK: "))
+                {
+                    String[] params = splitLast(line.substring(4), ' ');
+                    if (".".equals(params[0]) || ".".equals(params[1])) 
+                    {
+                        if (dotPkA != null || dotPkB != null) 
+                        {
+                            throw new RuntimeException("Multiple dot PK lines are not supported.");
+                        }
+                        dotPkA = params[0];
+                        dotPkB = params[1];
+                    } else if (!Objects.equals(params[0], params[1])) 
+                    {
+                        throw new RuntimeException("Unable to handle PK line: " + line);
+                    }
                 }
                 return null;
             }

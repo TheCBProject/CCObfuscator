@@ -27,8 +27,17 @@ public class ObfRemapper extends Remapper
         else
             map = obf.lookupObfClass(name);
 
-        if(map != null)
+        if(map != null && !dir.obfuscate(map).s_owner.equals(name))//If the name would have been changed by the obf lookup, use that.
             return dir.obfuscate(map).s_owner;
+        else if (dir.obfuscate && ".".equals(obf.getDotPkA()) && name.startsWith(obf.getDotPkB()))
+        {
+            name = name.replaceFirst(obf.getDotPkB(), "");
+            if (name.startsWith("/"))
+            {
+                name = name.substring(1);
+            }
+            return name;
+        }
         
         return name;
     }
